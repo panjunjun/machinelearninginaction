@@ -13,39 +13,50 @@ Output:     the most popular class label
 @author: pbharrin
 @update: pan_junjun
 """
+
+
 import operator
 from os import listdir
-
 from numpy import *
-
 from settings import debug, DEBUG
+
+
+def line(length=100):
+    return '-' * length
 
 
 def classify0(input_x, data_set, labels, k_value):
     data_set_size = data_set.shape[0]
-    debug(data_set_size)
+    debug("data_set_size = %s" % data_set_size)
     diff_matrix = tile(input_x, (data_set_size, 1)) - data_set
-    debug(diff_matrix)
+    debug("diff_matrix = %s" % diff_matrix)
     square_diff_matrix = diff_matrix ** 2
-    debug(square_diff_matrix)
+    debug("square_diff_matrix = %s" % square_diff_matrix)
     square_distance = square_diff_matrix.sum(axis=1)
-    debug(square_distance)
+    debug("square_distance = %s" % square_distance)
     distances = square_distance ** 0.5
-    debug(distances)
+    debug("distances = %s" % distances)
     sorted_dist_index = distances.argsort()
-    debug(sorted_dist_index)
+    debug("sorted_dist_index = %s" % sorted_dist_index)
     class_count = {}
     for i in range(k_value):
-        debug(i)
         vote_i_label = labels[sorted_dist_index[i]]
-        debug(vote_i_label)
         class_count[vote_i_label] = class_count.get(vote_i_label, 0) + 1
-        debug(class_count[vote_i_label])
-    print("loop end")
-    sorted_class_count = sorted(class_count.iteritems(),
-        key=operator.itemgetter(1), reverse=True)
-    debug(sorted_class_count)
+    sorted_class_count = sorted(class_count.iteritems(), key=operator.itemgetter(1), reverse=True)
+    debug("sorted_class_count = %s" % sorted_class_count)
     return sorted_class_count[0][0]
+
+
+def classify_person():
+    result_list = ['not at all', 'in small doses', 'in large doses']
+    percent_of_playing_video_games = float(raw_input("percentage of time spent playing vedio games?"))
+    frequent_fly_miles = float(raw_input("frequent flier miles earned per year?"))
+    ice_cream = float(raw_input("liters of ice cream consumed per year?"))
+    dating_data_matrix, dating_labels = file_to_matrix("datingTestSet2.txt")
+    norm_matrix, ranges, min_values = auto_normalization(dating_data_matrix)
+    input_array = array([frequent_fly_miles, percent_of_playing_video_games, ice_cream])
+    classifier_result = classify0((input_array - min_values) / ranges, norm_matrix, dating_labels, 3)
+    print("you will probably like this person: %s" % result_list[classifier_result - 1])
 
 
 def create_data_set():
@@ -54,18 +65,16 @@ def create_data_set():
     return group, labels
 
 
-def file2matrix(filename):
+def file_to_matrix(filename):
     fr = open(filename)
     array_of_lines = fr.readlines()
     number_of_lines = len(array_of_lines)  # get the number of lines in the file
-    debug(number_of_lines)
+    debug("number_of_lines = %s" % number_of_lines)
     return_matrix = zeros((number_of_lines, 3))  # prepare matrix to return
-    debug(return_matrix)
+    debug("return_matrix = %s" % return_matrix)
     class_label_vector = []  # prepare labels return
     index = 0
     for line in array_of_lines:
-        debug(index)
-        debug(line)
         line = line.strip()
         list_from_line = line.split("\t")
         return_matrix[index, :] = list_from_line[0: 3]
@@ -76,24 +85,33 @@ def file2matrix(filename):
 
 
 def auto_normalization(data_set):
-    min_values = data_set.min(0)
-    debug(min_values)
+    min_value = data_set.min(0)
+    debug("min_value = %s" % min_value)
     max_values = data_set.max(0)
-    debug(max_values)
-    ranges = max_values - min_values
+    debug("max_values = %s" % max_values)
+    ranges = max_values - min_value
 
     # norm_data_set = zeros(shape(data_set))
     m = data_set.shape[0]
-    norm_data_set = data_set - tile(min_values, (m, 1))
+    norm_data_set = data_set - tile(min_value, (m, 1)) # tile: copy 1st argument value to 2nd argument shape
     norm_data_set = norm_data_set / tile(ranges, (m, 1))  # element wise divide
-    return norm_data_set, ranges, min_values
+    return norm_data_set, ranges, min_value
 
 
 def dating_class_test():
-    ho_ratio = 0.50  # hold out 10%
-    dating_data_matrix, dating_labels = file2matrix("datingTestSet2.txt")  # load data setfrom file
-    norm_matrix, ranges, min_values = auto_normalization(dating_data_matrix)
+    debug(line())
+    ho_ratio = 0.1  # hold out 10%
+    debug("ho_ratio = %s" % ho_ratio)
+    dating_data_matrix, dating_labels = file_to_matrix("datingTestSet2.txt")  # load data setfrom file
+    debug("dating_data_matrix = %s" % dating_data_matrix)
+    debug("dating_labels = %s" % dating_labels)
+    norm_matrix, ranges, min_value = auto_normalization(dating_data_matrix)
+    debug("norm_matrix = %s" % norm_matrix)
+    debug("ranges = %s" % ranges)
+    debug("min_value = %s" % min_value)
     m = norm_matrix.shape[0]
+    print("norm_matrix.shape is %s" % str(norm_matrix.shape))
+    debug("m = %s" % m)
     numeric_test_vectors = int(m * ho_ratio)
     error_count = 0.0
     for i in range(numeric_test_vectors):
@@ -106,14 +124,14 @@ def dating_class_test():
     print(error_count)
 
 
-def img2vector(filename):
-    returnVect = zeros((1, 1024))
-    fr = open(filename)
+def image_to_vector(file_name):
+    return_vector = zeros((1, 1024))
+    fr = open(file_name)
     for i in range(32):
-        lineStr = fr.readline()
+        line_string = fr.readline()
         for j in range(32):
-            returnVect[0, 32 * i + j] = int(lineStr[j])
-    return returnVect
+            return_vector[0, 32 * i + j] = int(line_string[j])
+    return return_vector
 
 
 def handwritingClassTest():
@@ -126,7 +144,7 @@ def handwritingClassTest():
         fileStr = fileNameStr.split(".")[0]  # take off .txt
         classNumStr = int(fileStr.split("_")[0])
         hwLabels.append(classNumStr)
-        trainingMat[i, :] = img2vector("trainingDigits/%s" % fileNameStr)
+        trainingMat[i, :] = image_to_vector("trainingDigits/%s" % fileNameStr)
     testFileList = listdir("testDigits")  # iterate through the test set
     error_count = 0.0
     mTest = len(testFileList)
@@ -134,7 +152,7 @@ def handwritingClassTest():
         fileNameStr = testFileList[i]
         fileStr = fileNameStr.split(".")[0]  # take off .txt
         classNumStr = int(fileStr.split("_")[0])
-        vectorUnderTest = img2vector("testDigits/%s" % fileNameStr)
+        vectorUnderTest = image_to_vector("testDigits/%s" % fileNameStr)
         classifier_result = classify0(vectorUnderTest, trainingMat, hwLabels, 3)
         print("the classifier came back with: %d, the real answer is: %d" % (classifier_result, classNumStr))
         if (classifier_result != classNumStr):
@@ -145,27 +163,29 @@ def handwritingClassTest():
 
 if __name__ == "__main__":
     ####### create_data_set test #######
-    # data_set, label = create_data_set()
-    # debug(data_set)
-    # debug(label)
+    data_set_test, label_test = create_data_set()
+    print("data_set = %s" % data_set_test)
+    print("label = %s" % label_test)
     ####### classify0 test #######
-    # classified = classify0([0.0, 0.5], data_set, label, 3)
-    #print classified
-    ####### file2matrix test #######
-    dating_data_mat, dating_label = file2matrix("datingTestSet2.txt")
-    debug("dating_data_mat=%s" % dating_data_mat)
-    debug("dating_label[0:20]=%s" % dating_label[0:20])
-    if dating_data_mat.any() and dating_label and DEBUG:
-        import matplotlib.pyplot as plt
+    classification = classify0([0.0, 0.5], data_set_test, label_test, 3)
+    print("classification = %s" % classification)
+    ####### file_to_matrix test #######
+    dating_data_matrix_test, dating_label_test = file_to_matrix("datingTestSet2.txt")
+    print("dating_data_matrix_test = %s" % dating_data_matrix_test)
+    print("dating_label_test[0:20] = %s" % dating_label_test[0:20])
 
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.scatter(dating_data_mat[:, 2], dating_data_mat[:, 0], 15.0 * array(dating_label), 15.0 * array(dating_label))
-        plt.show()
+    # if dating_data_matrix_test.any() and dating_label_test and DEBUG:
+    #     import matplotlib.pyplot as plt
+    #
+    #     fig = plt.figure()
+    #     ax = fig.add_subplot(111)
+    #     ax.scatter(dating_data_matrix_test[:, 0], dating_data_matrix_test[:, 1], 15.0 * array(dating_label_test), 15.0 * array(dating_label_test))
+    #     plt.show()
 
-    norm_mat, value_range, min_value = auto_normalization(dating_data_mat)
-    debug("norm_mat=%s" % norm_mat)
-    debug("value_range=%s" % value_range)
-    debug("min_value=%s" % min_value)
+    norm_mat_test, value_range_test, min_value_test = auto_normalization(dating_data_matrix_test)
+    print("norm_mat_test=%s" % norm_mat_test)
+    print("value_range_test=%s" % value_range_test)
+    print("min_value_test=%s" % min_value_test)
 
-    #print dating_data_matrix.shape
+    # dating_class_test()
+    classify_person()
