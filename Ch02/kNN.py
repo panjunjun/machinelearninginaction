@@ -22,7 +22,7 @@ from settings import debug, DEBUG
 
 
 def line(length=100):
-    return '-' * length
+    return '_' * length
 
 
 def classify0(input_x, data_set, labels, k_value):
@@ -134,31 +134,31 @@ def image_to_vector(file_name):
     return return_vector
 
 
-def handwritingClassTest():
-    hwLabels = []
-    trainingFileList = listdir("trainingDigits")  # load the training set
-    m = len(trainingFileList)
-    trainingMat = zeros((m, 1024))
+def hand_writing_classification_test():
+    hand_writing_label = []
+    training_file_list = listdir("digits/trainingDigits")  # load the training set
+    m = len(training_file_list)
+    training_matrix = zeros((m, 1024))
     for i in range(m):
-        fileNameStr = trainingFileList[i]
-        fileStr = fileNameStr.split(".")[0]  # take off .txt
-        classNumStr = int(fileStr.split("_")[0])
-        hwLabels.append(classNumStr)
-        trainingMat[i, :] = image_to_vector("trainingDigits/%s" % fileNameStr)
-    testFileList = listdir("testDigits")  # iterate through the test set
+        file_name_string = training_file_list[i]
+        file_string = file_name_string.split(".")[0]  # take off .txt
+        class_number_string = int(file_string.split("_")[0])
+        hand_writing_label.append(class_number_string)
+        training_matrix[i, :] = image_to_vector("digits/trainingDigits/%s" % file_name_string)
+    test_file_list = listdir("digits/testDigits")  # iterate through the test set
     error_count = 0.0
-    mTest = len(testFileList)
-    for i in range(mTest):
-        fileNameStr = testFileList[i]
-        fileStr = fileNameStr.split(".")[0]  # take off .txt
-        classNumStr = int(fileStr.split("_")[0])
-        vectorUnderTest = image_to_vector("testDigits/%s" % fileNameStr)
-        classifier_result = classify0(vectorUnderTest, trainingMat, hwLabels, 3)
-        print("the classifier came back with: %d, the real answer is: %d" % (classifier_result, classNumStr))
-        if (classifier_result != classNumStr):
+    m_test = len(test_file_list)
+    for i in range(m_test):
+        file_name_string = test_file_list[i]
+        file_string = file_name_string.split(".")[0]  # take off .txt
+        class_number_string = int(file_string.split("_")[0])
+        vector_under_test = image_to_vector("digits/testDigits/%s" % file_name_string)
+        classifier_result = classify0(vector_under_test, training_matrix, hand_writing_label, 3)
+        print("the classifier came back with: %d, the real answer is: %d" % (classifier_result, class_number_string))
+        if classifier_result != class_number_string:
             error_count += 1.0
     print("\nthe total number of errors is: %d" % error_count)
-    print("\nthe total error rate is: %f" % (error_count / float(mTest)))
+    print("\nthe total error rate is: %f" % (error_count / float(m_test)))
 
 
 if __name__ == "__main__":
@@ -188,4 +188,5 @@ if __name__ == "__main__":
     print("min_value_test=%s" % min_value_test)
 
     # dating_class_test()
-    classify_person()
+    # classify_person()
+    hand_writing_classification_test()
